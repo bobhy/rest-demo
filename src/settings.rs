@@ -22,11 +22,11 @@ use crate::server;
 use fast_config::Config;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use const_format::concatcp;
 
-//fixme: const APP_PREFIX: &str = "rest-demo";
-//fixme: is there a way to catenate `const` strings and avoid repeating the literal?
-const CONFIG_FILE_PATH: &str = "rest-demo-config.toml";
+const APP_PREFIX: &str = "rest-demo";
 const CONFIG_FILE_PREFIX: &str = "./";
+const CONFIG_FILE_PATH: &str = concatcp!(CONFIG_FILE_PREFIX, APP_PREFIX, "-config.toml");
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {

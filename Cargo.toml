@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 axum = "0.7.7"
 config = "0.14.0"
+const_format = "0.2.33"
 fast_config = { path = "../fast_config", features = ["toml"] }
 lazy_static = "1.5.0"
 log = "0.4.22"
