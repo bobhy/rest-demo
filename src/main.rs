@@ -1,3 +1,4 @@
+//todo add an error module and all the From derivations.
 use sensible_env_logger;
 use serde::{Deserialize, Serialize};
 
@@ -27,8 +28,11 @@ impl Default for Settings {
 
 #[tokio::main]
 async fn main() {
-    sensible_env_logger::init_timed!();
     //todo: figure out how to enable logging (with configured log level) *before* trying to load config.
+    //todo-resolved: enable env config, then this can be done.
+    
+    sensible_env_logger::init_timed!();
+    
     let _foo = &CONFIG.main; // to force config load
 
     debug!("A debug message from the world");
