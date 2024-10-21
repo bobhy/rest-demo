@@ -19,19 +19,16 @@
 //! ```
 
 use crate::server;
-#[allow(unused)]
-use config::{Config, ConfigError, Environment, File};
+use fast_config::Config;
 use lazy_static::lazy_static;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-
-const APP_PREFIX: &str = "rest-demo";
-//todo: is there a way to catenate `const` strings and avoid repeating the literal?
+//fixme: const APP_PREFIX: &str = "rest-demo";
+//fixme: is there a way to catenate `const` strings and avoid repeating the literal?
 const CONFIG_FILE_PATH: &str = "rest-demo-config.toml";
-#[allow(unused)]
 const CONFIG_FILE_PREFIX: &str = "./";
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub main: crate::Settings,
     pub server: server::Settings,
@@ -46,18 +43,9 @@ impl Default for Settings {
     }
 }
 
-impl Settings {
-    fn load() -> Result<Self, ConfigError> {
-        let builder = Config::builder()
-            .add_source(File::with_name(CONFIG_FILE_PATH).required(false))
-            .add_source(Environment::with_prefix(APP_PREFIX).prefix_separator("__"))
-            .build()?;
-
-        builder.try_deserialize()
-    }
-}
-
-
 lazy_static! {
-    pub static ref CONFIG: Settings = Settings::load().expect("error loading config");
+    pub static ref CONFIG: Settings = Config::new(CONFIG_FILE_PATH, Settings::default())
+        .expect("error loading config")
+        .data
+        .clone();
 }

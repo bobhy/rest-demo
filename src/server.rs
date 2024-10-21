@@ -1,10 +1,10 @@
 //! The web server itself
 
 use axum::{routing::get, Router};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub addr: String,
 }
@@ -12,7 +12,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Settings {
-            addr: "0.0.0.0:3000".into(),
+            addr: "0.0.0.0:3001".into(),
         }
     }
 }

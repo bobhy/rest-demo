@@ -1,5 +1,5 @@
-use pretty_env_logger;
-use serde::Deserialize;
+use sensible_env_logger;
+use serde::{Deserialize, Serialize};
 
 #[macro_use]
 extern crate log;
@@ -12,7 +12,7 @@ mod server;
 mod settings;
 
 /// Main settings
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub level: String,
 }
@@ -27,8 +27,9 @@ impl Default for Settings {
 
 #[tokio::main]
 async fn main() {
-    //todo: feed log level to logger
-    pretty_env_logger::init();
+    sensible_env_logger::init_timed!();
+    //todo: figure out how to enable logging (with configured log level) *before* trying to load config.
+    let _foo = &CONFIG.main; // to force config load
 
     debug!("A debug message from the world");
     info!("A info message from the world");
