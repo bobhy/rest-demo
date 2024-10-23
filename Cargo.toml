@@ -36,7 +36,7 @@ tower = { version = "0.5", features = ["util", "make"] }
 url = "2.5"
 
 [dev-dependencies]
-axum-test = {version="16.2"}
+axum-test = {version="16.2", features = ["pretty-assertions", "yaml", "msgpack", "reqwest", "typed-routing", "ws"]}
 async-trait = "0.1"
 axum = { version = "0.7", features = ["multipart", "tokio", "ws"] }
 axum-extra = { version = "0.9", features = ["cookie", "typed-routing", "query"] }
