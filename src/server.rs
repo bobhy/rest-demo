@@ -1,6 +1,6 @@
 //! The web server itself
 
-use axum::{routing::get, routing::post, Router};
+use axum::{routing::get, Router};
 use serde::{Deserialize, Serialize};
 use tokio;
 
@@ -20,10 +20,9 @@ impl Default for Settings {
 }
 
 pub async fn run(settings: &Settings) {
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, Rust!" }))
-        .route("/db/user/create-user", post(user::create_user))
-        .route("/db/user/list-users", get(user::list_users));
+    let mut app = Router::new().route("/", get(|| async { "Hello, Rust!" }));
+
+    app = user::add_routes(app);
 
     info!("Running on {}", settings.addr);
     let listener = tokio::net::TcpListener::bind(&settings.addr).await.unwrap();
