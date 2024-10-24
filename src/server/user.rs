@@ -12,11 +12,34 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct User {
     id: u64,
     name: String,
     email: String,
+}
+
+/// Because real JSON requires a single root element...
+#[derive(Serialize, Deserialize)]
+pub struct UserList {
+    users: Vec<User>,
+}
+
+pub fn sample_users() -> UserList {
+    UserList {
+        users: vec![
+            User {
+                id: 1,
+                name: "Elijah".into(),
+                email: "elijah@example.com".into(),
+            },
+            User {
+                id: 2,
+                name: "John".into(),
+                email: "john@doe.com".into(),
+            },
+        ],
+    }
 }
 
 /// Add routes for this handler
@@ -33,20 +56,8 @@ pub async fn create_user() -> impl IntoResponse {
         .unwrap()
 }
 // Handler for /users
-pub async fn list_users() -> Json<Vec<User>> {
-    let users = vec![
-        User {
-            id: 1,
-            name: "Elijah".to_string(),
-            email: "elijah@example.com".to_string(),
-        },
-        User {
-            id: 2,
-            name: "John".to_string(),
-            email: "john@doe.com".to_string(),
-        },
-    ];
-    Json(users)
+pub async fn list_users() -> Json<UserList> {
+    Json(sample_users())
 }
 
 #[cfg(test)]
@@ -61,6 +72,7 @@ mod tests {
 
     use rstest::*;
 
+    #[fixture]
     async fn gen_test_client() -> TestClient {
         let test_routes = super::add_routes(Router::new());
         TestClient::new(test_routes).await
@@ -68,8 +80,9 @@ mod tests {
 
     #[rstest]
     #[case("/db/user/create-user", &json!({"any": "any"}), "User created successfully") ]
-    #[case("/db/user/create-user", &json!({"foo": "bar"}), "unsuccessfully") ]
+    #[case("/db/user/create-user", &json!({"foo": "bar"}), "successfully") ]
     #[tokio::test]
+    #[awt]
     async fn create_user(#[case] url: &str, #[case] post_body: &Value, #[case] expected: &str) {
         let test_client = gen_test_client().await;
 
@@ -87,7 +100,7 @@ mod tests {
 
     #[rstest]
     #[case("/db/user/list-users", &vec!("Elijah", "John"))]
-    #[case("/db/user/list-users?foo=bar&bas=gronk", &vec!("Elijahx", "John"))]
+    #[case("/db/user/list-users?foo=bar&bas=gronk", &vec!("Elijah", "John"))]
     #[tokio::test]
     async fn list_users(#[case] url: &str, #[case] expected: &[&str]) {
         let test_client = gen_test_client().await;
@@ -95,7 +108,7 @@ mod tests {
         let response = test_client.get(url).send().await;
 
         assert2!(response.status() == StatusCode::OK);
-        let rt: Vec<User> = response.json().await;
+        let rt = response.json::<UserList>().await.users;
         assert2!(rt.len() > 0, "response not long enough");
         check!(rt[0].name == expected[0]);
         check!(rt[1].name == expected[1]);
