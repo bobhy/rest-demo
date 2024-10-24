@@ -10,7 +10,7 @@ use axum::{
     Json,
 };
 
-use serde::{Deserialize,Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -52,6 +52,8 @@ pub async fn list_users() -> Json<Vec<User>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert2::assert as assert2;
+    use assert2::check;
     use axum::Router;
     use axum_test_helper::TestClient;
     use serde_json::json;
@@ -66,7 +68,7 @@ mod tests {
 
     #[rstest]
     #[case("/db/user/create-user", &json!({"any": "any"}), "User created successfully") ]
-    #[case("/db/user/create-user", &json!({"foo": "bar"}), "successfully") ]
+    #[case("/db/user/create-user", &json!({"foo": "bar"}), "unsuccessfully") ]
     #[tokio::test]
     async fn create_user(#[case] url: &str, #[case] post_body: &Value, #[case] expected: &str) {
         let test_client = gen_test_client().await;
@@ -76,9 +78,10 @@ mod tests {
         assert_eq!(response.status(), StatusCode::CREATED);
         let rt = response.text().await;
 
-        assert!(
+        assert2!(
             rt.contains(expected),
-            "response doesn't contain expected text"
+            "response doesn't contain expected <{}>",
+            expected
         );
     }
 
@@ -86,14 +89,15 @@ mod tests {
     #[case("/db/user/list-users", &vec!("Elijah", "John"))]
     #[case("/db/user/list-users?foo=bar&bas=gronk", &vec!("Elijahx", "John"))]
     #[tokio::test]
-    async fn list_users(#[case] url: &str, #[case]expected: &[&str]) {
+    async fn list_users(#[case] url: &str, #[case] expected: &[&str]) {
         let test_client = gen_test_client().await;
 
         let response = test_client.get(url).send().await;
 
-        assert_eq!(response.status(), StatusCode::OK, "expected status OK");
+        assert2!(response.status() == StatusCode::OK);
         let rt: Vec<User> = response.json().await;
-        assert!(rt.len() > 0, "response not long enough");
-        assert!(rt[0].name == expected[0] && rt[1].name == expected[1] );
+        assert2!(rt.len() > 0, "response not long enough");
+        check!(rt[0].name == expected[0]);
+        check!(rt[1].name == expected[1]);
     }
 }
