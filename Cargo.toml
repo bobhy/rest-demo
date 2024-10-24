@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.7"
+axum-test-helper = "0.4.0"
 config = "0.14.0"
 const_format = "0.2.33"
 fast_config = { path = "../fast_config", features = ["toml"] }
@@ -16,3 +17,8 @@ sensible-env-logger = "0.3.2"
 serde = "1.0.210"
 serde_json = "1.0.68"
 tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
+
+[dev-dependencies]
+assert2 = "0.3.15"
+axum-test-helper = { version = "0.4", features = ["withouttrace"] }
+rstest = "0.23.0"

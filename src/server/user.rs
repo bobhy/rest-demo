@@ -10,9 +10,9 @@ use axum::{
     Json,
 };
 
-use serde::Serialize;
+use serde::{Deserialize,Serialize};
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct User {
     id: u64,
     name: String,
@@ -49,36 +49,51 @@ pub async fn list_users() -> Json<Vec<User>> {
     Json(users)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::routing::put;
-    use axum::Json;
     use axum::Router;
-    use axum_test::TestServer;
+    use axum_test_helper::TestClient;
     use serde_json::json;
     use serde_json::Value;
 
+    use rstest::*;
+
+    async fn gen_test_client() -> TestClient {
+        let test_routes = super::add_routes(Router::new());
+        TestClient::new(test_routes).await
+    }
+
+    #[rstest]
+    #[case("/db/user/create-user", &json!({"any": "any"}), "User created successfully") ]
+    #[case("/db/user/create-user", &json!({"foo": "bar"}), "successfully") ]
     #[tokio::test]
-    async fn create_user() {
-        let mut test_app = Router::new();
-        test_app = add_routes(test_app);
+    async fn create_user(#[case] url: &str, #[case] post_body: &Value, #[case] expected: &str) {
+        let test_client = gen_test_client().await;
 
-        //let server = TestServer::new(test_app)?;
-        let server = TestServer::builder()
-            .expect_success_by_default()
-            .mock_transport()
-            .build(test_app)
-            .unwrap();
+        let response = test_client.post(url).json(post_body).send().await;
 
-        let response = server
-            .post("/db/user/create-user")
-            .json(&json!({"any": "any"}))
-            .await;
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let rt = response.text().await;
 
-        response.assert_status_success();
-        response.assert_status(StatusCode::CREATED);
-        response.assert_text_contains("User created successfully");
+        assert!(
+            rt.contains(expected),
+            "response doesn't contain expected text"
+        );
+    }
+
+    #[rstest]
+    #[case("/db/user/list-users", &vec!("Elijah", "John"))]
+    #[case("/db/user/list-users?foo=bar&bas=gronk", &vec!("Elijahx", "John"))]
+    #[tokio::test]
+    async fn list_users(#[case] url: &str, #[case]expected: &[&str]) {
+        let test_client = gen_test_client().await;
+
+        let response = test_client.get(url).send().await;
+
+        assert_eq!(response.status(), StatusCode::OK, "expected status OK");
+        let rt: Vec<User> = response.json().await;
+        assert!(rt.len() > 0, "response not long enough");
+        assert!(rt[0].name == expected[0] && rt[1].name == expected[1] );
     }
 }
